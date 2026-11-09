@@ -1,0 +1,16 @@
+version: v2
+# Plugins run via `go run` at pinned versions, so generating needs nothing
+# installed beyond Go and buf. Keep protoc-gen-go in step with the
+# google.golang.org/protobuf version in go.mod.
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: github.com/Intrufix/intrufix-proto/gen/go
+plugins:
+  - local: ["go", "run", "google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12"]
+    out: gen/go
+    opt: paths=source_relative
+  - local: ["go", "run", "google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2"]
+    out: gen/go
+    opt: paths=source_relative

@@ -1,0 +1,25 @@
+name: buf
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: make lint
+      - name: breaking changes
+        if: github.event_name == 'pull_request'
+        run: go run github.com/bufbuild/buf/cmd/buf@v1.75.0 breaking --against ".git#branch=origin/${{ github.base_ref }}"
+      - name: generated code is up to date
+        run: |
+          make generate
+          git diff --exit-code

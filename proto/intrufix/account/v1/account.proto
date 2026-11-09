@@ -1,0 +1,140 @@
+syntax = "proto3";
+
+package intrufix.account.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// Internal API of intrufix-account, served over gRPC on the private network
+// only. It is never exposed through the gateway.
+//
+// Callers authenticate with their own service token, sent as
+// "authorization: Bearer <token>" metadata. Account decides per service which
+// methods each caller may use.
+//
+// Compatibility rules: only add fields and RPCs. Never renumber, retype or
+// remove a field; reserve its number instead. `buf breaking` enforces this.
+
+// UserService gives other services read access to users.
+// Callers: core, admin.
+service UserService {
+  // Returns NOT_FOUND if the user doesn't exist.
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+
+  // Looks up to 100 users in one call. IDs that don't exist are left out of
+  // the response, so callers should index the result by ID.
+  rpc BatchGetUsers(BatchGetUsersRequest) returns (BatchGetUsersResponse);
+}
+
+// ArtisanService gives other services read access to artisan profiles. An
+// artisan is a user who has set up an artisan profile. The profile has its own
+// ID, which is what customers see, so a customer can't link the artisan they
+// hired to that person's customer account.
+// Callers: core, admin.
+service ArtisanService {
+  // Returns NOT_FOUND if there is no artisan profile with this ID.
+  rpc GetArtisan(GetArtisanRequest) returns (GetArtisanResponse);
+
+  // Lists the artisans customers can hire for a service type: active, not
+  // suspended, verified first. At most 50.
+  rpc ListArtisans(ListArtisansRequest) returns (ListArtisansResponse);
+}
+
+// AdminService covers administrative actions on users.
+// Callers: admin only. Send the acting admin's ID as "x-admin-id" metadata;
+// account writes it to the audit log.
+service AdminService {
+  // Blocks new logins and revokes every existing session for the user.
+  rpc SuspendUser(SuspendUserRequest) returns (SuspendUserResponse);
+  rpc UnsuspendUser(UnsuspendUserRequest) returns (UnsuspendUserResponse);
+
+  // Marks an artisan profile as checked by Intrufix (identity, skills), or
+  // removes that mark. Customers see verified artisans first.
+  rpc SetArtisanVerified(SetArtisanVerifiedRequest) returns (SetArtisanVerifiedResponse);
+}
+
+message User {
+  uint64 id = 1;
+  string email = 2;
+  string phone = 3;
+  string first_name = 4;
+  string last_name = 5;
+  string onboarding_stage = 6;
+  bool suspended = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message Artisan {
+  // The artisan profile's public ID.
+  uint64 id = 1;
+  // The account behind the profile. Internal only: never show it to customers.
+  uint64 user_id = 2;
+  string display_name = 3;
+  string trade = 4;
+  string specialty = 5;
+  string phone = 6;
+  string avatar_url = 7;
+  repeated string service_types = 8;
+  // False once the artisan has paused their profile or the account is
+  // suspended. Inactive artisans can't take new requests.
+  bool active = 9;
+  bool verified = 10;
+  string about = 11;
+  // Lowest call-out price the artisan quotes, in whole naira.
+  int64 from_price = 12;
+  // Free text, e.g. "Mon–Sat".
+  string availability = 13;
+}
+
+message GetArtisanRequest {
+  uint64 artisan_id = 1;
+}
+
+message GetArtisanResponse {
+  Artisan artisan = 1;
+}
+
+message ListArtisansRequest {
+  // Required: one of the service types artisans offer, e.g. "Plumbing".
+  string service_type = 1;
+  // Leave out this user's own profile, so customers never see themselves.
+  uint64 exclude_user_id = 2;
+}
+
+message ListArtisansResponse {
+  repeated Artisan artisans = 1;
+}
+
+message GetUserRequest {
+  uint64 user_id = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message BatchGetUsersRequest {
+  repeated uint64 user_ids = 1;
+}
+
+message BatchGetUsersResponse {
+  repeated User users = 1;
+}
+
+message SuspendUserRequest {
+  uint64 user_id = 1;
+}
+
+message SuspendUserResponse {}
+
+message UnsuspendUserRequest {
+  uint64 user_id = 1;
+}
+
+message UnsuspendUserResponse {}
+
+message SetArtisanVerifiedRequest {
+  uint64 artisan_id = 1;
+  bool verified = 2;
+}
+
+message SetArtisanVerifiedResponse {}
