@@ -25,13 +25,13 @@ service UserService {
   rpc BatchGetUsers(BatchGetUsersRequest) returns (BatchGetUsersResponse);
 }
 
-// ArtisanService gives other services read access to artisan profiles. An
-// artisan is a user who has set up an artisan profile. The profile has its own
-// ID, which is what customers see, so a customer can't link the artisan they
-// hired to that person's customer account.
+// ArtisanService gives other services read access to artisans. An artisan is
+// a user who has submitted an artisan application; they keep their one user
+// ID, and the session's mode says whether they're acting as a customer or an
+// artisan.
 // Callers: core, admin.
 service ArtisanService {
-  // Returns NOT_FOUND if there is no artisan profile with this ID.
+  // Returns NOT_FOUND if the user has no artisan application.
   rpc GetArtisan(GetArtisanRequest) returns (GetArtisanResponse);
 
   // Lists the artisans customers can hire for a service type: active, not
@@ -64,28 +64,42 @@ message User {
 }
 
 message Artisan {
-  // The artisan profile's public ID.
+  // The artisan's user ID. Same as user_id: a person has one ID.
   uint64 id = 1;
-  // The account behind the profile. Internal only: never show it to customers.
   uint64 user_id = 2;
+  // The business name if they gave one, otherwise their full name.
   string display_name = 3;
-  string trade = 4;
-  string specialty = 5;
+  string trade = 4;     // not set yet
+  string specialty = 5; // not set yet
   string phone = 6;
-  string avatar_url = 7;
-  repeated string service_types = 8;
-  // False once the artisan has paused their profile or the account is
-  // suspended. Inactive artisans can't take new requests.
+  string avatar_url = 7; // not set yet
+  // Replaced by skill_ids and other_trades.
+  repeated string service_types = 8 [deprecated = true];
+  // True once the application is approved and the account isn't suspended.
+  // Only active artisans can take new requests.
   bool active = 9;
   bool verified = 10;
+  // The bio from their application.
   string about = 11;
-  // Lowest call-out price the artisan quotes, in whole naira.
-  int64 from_price = 12;
-  // Free text, e.g. "Mon–Sat".
+  int64 from_price = 12; // not set yet
+  // When customers can reach them, e.g. "Weekdays · 8:00 AM – 6:00 PM".
   string availability = 13;
+
+  // Skills from the app's trade catalog, as "<category id>.<skill id>",
+  // e.g. "power-and-water.electrician".
+  repeated string skill_ids = 14;
+  // "Other (specify)" answers: category id -> the trade as they typed it.
+  map<string, string> other_trades = 15;
+  // The application's review status: "pending_review", "approved" or
+  // "rejected".
+  string application_status = 16;
+  string full_name = 17;
+  string business_name = 18;
+  uint32 years_of_experience = 19;
 }
 
 message GetArtisanRequest {
+  // The artisan's user ID.
   uint64 artisan_id = 1;
 }
 
