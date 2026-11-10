@@ -6,7 +6,7 @@ managed:
   enabled: true
   override:
     - file_option: go_package_prefix
-      value: github.com/Intrufix/intrufix-proto/gen/go
+      value: github.com/Mayotomiwa/intrufix-proto/gen/go
 plugins:
   - local: ["go", "run", "google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12"]
     out: gen/go

@@ -1017,8 +1017,8 @@ const file_intrufix_account_v1_account_proto_rawDesc = "" +
 	"\fAdminService\x12`\n" +
 	"\vSuspendUser\x12'.intrufix.account.v1.SuspendUserRequest\x1a(.intrufix.account.v1.SuspendUserResponse\x12f\n" +
 	"\rUnsuspendUser\x12).intrufix.account.v1.UnsuspendUserRequest\x1a*.intrufix.account.v1.UnsuspendUserResponse\x12u\n" +
-	"\x12SetArtisanVerified\x12..intrufix.account.v1.SetArtisanVerifiedRequest\x1a/.intrufix.account.v1.SetArtisanVerifiedResponseB\xde\x01\n" +
-	"\x17com.intrufix.account.v1B\fAccountProtoP\x01ZGgithub.com/Intrufix/intrufix-proto/gen/go/intrufix/account/v1;accountv1\xa2\x02\x03IAX\xaa\x02\x13Intrufix.Account.V1\xca\x02\x13Intrufix\\Account\\V1\xe2\x02\x1fIntrufix\\Account\\V1\\GPBMetadata\xea\x02\x15Intrufix::Account::V1b\x06proto3"
+	"\x12SetArtisanVerified\x12..intrufix.account.v1.SetArtisanVerifiedRequest\x1a/.intrufix.account.v1.SetArtisanVerifiedResponseB\xe0\x01\n" +
+	"\x17com.intrufix.account.v1B\fAccountProtoP\x01ZIgithub.com/Mayotomiwa/intrufix-proto/gen/go/intrufix/account/v1;accountv1\xa2\x02\x03IAX\xaa\x02\x13Intrufix.Account.V1\xca\x02\x13Intrufix\\Account\\V1\xe2\x02\x1fIntrufix\\Account\\V1\\GPBMetadata\xea\x02\x15Intrufix::Account::V1b\x06proto3"
 
 var (
 	file_intrufix_account_v1_account_proto_rawDescOnce sync.Once

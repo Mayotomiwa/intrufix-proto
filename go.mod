@@ -1,4 +1,4 @@
-module github.com/Intrufix/intrufix-proto
+module github.com/Mayotomiwa/intrufix-proto
 
 go 1.26.4
 
