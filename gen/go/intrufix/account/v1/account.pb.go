@@ -124,27 +124,41 @@ func (x *User) GetCreatedAt() *timestamppb.Timestamp {
 
 type Artisan struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The artisan profile's public ID.
-	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	// The account behind the profile. Internal only: never show it to customers.
-	UserId       uint64   `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	DisplayName  string   `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
-	Trade        string   `protobuf:"bytes,4,opt,name=trade,proto3" json:"trade,omitempty"`
-	Specialty    string   `protobuf:"bytes,5,opt,name=specialty,proto3" json:"specialty,omitempty"`
-	Phone        string   `protobuf:"bytes,6,opt,name=phone,proto3" json:"phone,omitempty"`
-	AvatarUrl    string   `protobuf:"bytes,7,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"`
+	// The artisan's user ID. Same as user_id: a person has one ID.
+	Id     uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	UserId uint64 `protobuf:"varint,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	// The business name if they gave one, otherwise their full name.
+	DisplayName string `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	Trade       string `protobuf:"bytes,4,opt,name=trade,proto3" json:"trade,omitempty"`         // not set yet
+	Specialty   string `protobuf:"bytes,5,opt,name=specialty,proto3" json:"specialty,omitempty"` // not set yet
+	Phone       string `protobuf:"bytes,6,opt,name=phone,proto3" json:"phone,omitempty"`
+	AvatarUrl   string `protobuf:"bytes,7,opt,name=avatar_url,json=avatarUrl,proto3" json:"avatar_url,omitempty"` // not set yet
+	// Replaced by skill_ids and other_trades.
+	//
+	// Deprecated: Marked as deprecated in intrufix/account/v1/account.proto.
 	ServiceTypes []string `protobuf:"bytes,8,rep,name=service_types,json=serviceTypes,proto3" json:"service_types,omitempty"`
-	// False once the artisan has paused their profile or the account is
-	// suspended. Inactive artisans can't take new requests.
-	Active   bool   `protobuf:"varint,9,opt,name=active,proto3" json:"active,omitempty"`
-	Verified bool   `protobuf:"varint,10,opt,name=verified,proto3" json:"verified,omitempty"`
-	About    string `protobuf:"bytes,11,opt,name=about,proto3" json:"about,omitempty"`
-	// Lowest call-out price the artisan quotes, in whole naira.
-	FromPrice int64 `protobuf:"varint,12,opt,name=from_price,json=fromPrice,proto3" json:"from_price,omitempty"`
-	// Free text, e.g. "Mon–Sat".
-	Availability  string `protobuf:"bytes,13,opt,name=availability,proto3" json:"availability,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// True once the application is approved and the account isn't suspended.
+	// Only active artisans can take new requests.
+	Active   bool `protobuf:"varint,9,opt,name=active,proto3" json:"active,omitempty"`
+	Verified bool `protobuf:"varint,10,opt,name=verified,proto3" json:"verified,omitempty"`
+	// The bio from their application.
+	About     string `protobuf:"bytes,11,opt,name=about,proto3" json:"about,omitempty"`
+	FromPrice int64  `protobuf:"varint,12,opt,name=from_price,json=fromPrice,proto3" json:"from_price,omitempty"` // not set yet
+	// When customers can reach them, e.g. "Weekdays · 8:00 AM – 6:00 PM".
+	Availability string `protobuf:"bytes,13,opt,name=availability,proto3" json:"availability,omitempty"`
+	// Skills from the app's trade catalog, as "<category id>.<skill id>",
+	// e.g. "power-and-water.electrician".
+	SkillIds []string `protobuf:"bytes,14,rep,name=skill_ids,json=skillIds,proto3" json:"skill_ids,omitempty"`
+	// "Other (specify)" answers: category id -> the trade as they typed it.
+	OtherTrades map[string]string `protobuf:"bytes,15,rep,name=other_trades,json=otherTrades,proto3" json:"other_trades,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// The application's review status: "pending_review", "approved" or
+	// "rejected".
+	ApplicationStatus string `protobuf:"bytes,16,opt,name=application_status,json=applicationStatus,proto3" json:"application_status,omitempty"`
+	FullName          string `protobuf:"bytes,17,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
+	BusinessName      string `protobuf:"bytes,18,opt,name=business_name,json=businessName,proto3" json:"business_name,omitempty"`
+	YearsOfExperience uint32 `protobuf:"varint,19,opt,name=years_of_experience,json=yearsOfExperience,proto3" json:"years_of_experience,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *Artisan) Reset() {
@@ -226,6 +240,7 @@ func (x *Artisan) GetAvatarUrl() string {
 	return ""
 }
 
+// Deprecated: Marked as deprecated in intrufix/account/v1/account.proto.
 func (x *Artisan) GetServiceTypes() []string {
 	if x != nil {
 		return x.ServiceTypes
@@ -268,9 +283,52 @@ func (x *Artisan) GetAvailability() string {
 	return ""
 }
 
+func (x *Artisan) GetSkillIds() []string {
+	if x != nil {
+		return x.SkillIds
+	}
+	return nil
+}
+
+func (x *Artisan) GetOtherTrades() map[string]string {
+	if x != nil {
+		return x.OtherTrades
+	}
+	return nil
+}
+
+func (x *Artisan) GetApplicationStatus() string {
+	if x != nil {
+		return x.ApplicationStatus
+	}
+	return ""
+}
+
+func (x *Artisan) GetFullName() string {
+	if x != nil {
+		return x.FullName
+	}
+	return ""
+}
+
+func (x *Artisan) GetBusinessName() string {
+	if x != nil {
+		return x.BusinessName
+	}
+	return ""
+}
+
+func (x *Artisan) GetYearsOfExperience() uint32 {
+	if x != nil {
+		return x.YearsOfExperience
+	}
+	return 0
+}
+
 type GetArtisanRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ArtisanId     uint64                 `protobuf:"varint,1,opt,name=artisan_id,json=artisanId,proto3" json:"artisan_id,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The artisan's user ID.
+	ArtisanId     uint64 `protobuf:"varint,1,opt,name=artisan_id,json=artisanId,proto3" json:"artisan_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -893,7 +951,7 @@ const file_intrufix_account_v1_account_proto_rawDesc = "" +
 	"\x10onboarding_stage\x18\x06 \x01(\tR\x0fonboardingStage\x12\x1c\n" +
 	"\tsuspended\x18\a \x01(\bR\tsuspended\x129\n" +
 	"\n" +
-	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\xf0\x02\n" +
+	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\xc4\x05\n" +
 	"\aArtisan\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x04R\x06userId\x12!\n" +
@@ -902,15 +960,24 @@ const file_intrufix_account_v1_account_proto_rawDesc = "" +
 	"\tspecialty\x18\x05 \x01(\tR\tspecialty\x12\x14\n" +
 	"\x05phone\x18\x06 \x01(\tR\x05phone\x12\x1d\n" +
 	"\n" +
-	"avatar_url\x18\a \x01(\tR\tavatarUrl\x12#\n" +
-	"\rservice_types\x18\b \x03(\tR\fserviceTypes\x12\x16\n" +
+	"avatar_url\x18\a \x01(\tR\tavatarUrl\x12'\n" +
+	"\rservice_types\x18\b \x03(\tB\x02\x18\x01R\fserviceTypes\x12\x16\n" +
 	"\x06active\x18\t \x01(\bR\x06active\x12\x1a\n" +
 	"\bverified\x18\n" +
 	" \x01(\bR\bverified\x12\x14\n" +
 	"\x05about\x18\v \x01(\tR\x05about\x12\x1d\n" +
 	"\n" +
 	"from_price\x18\f \x01(\x03R\tfromPrice\x12\"\n" +
-	"\favailability\x18\r \x01(\tR\favailability\"2\n" +
+	"\favailability\x18\r \x01(\tR\favailability\x12\x1b\n" +
+	"\tskill_ids\x18\x0e \x03(\tR\bskillIds\x12P\n" +
+	"\fother_trades\x18\x0f \x03(\v2-.intrufix.account.v1.Artisan.OtherTradesEntryR\votherTrades\x12-\n" +
+	"\x12application_status\x18\x10 \x01(\tR\x11applicationStatus\x12\x1b\n" +
+	"\tfull_name\x18\x11 \x01(\tR\bfullName\x12#\n" +
+	"\rbusiness_name\x18\x12 \x01(\tR\fbusinessName\x12.\n" +
+	"\x13years_of_experience\x18\x13 \x01(\rR\x11yearsOfExperience\x1a>\n" +
+	"\x10OtherTradesEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"2\n" +
 	"\x11GetArtisanRequest\x12\x1d\n" +
 	"\n" +
 	"artisan_id\x18\x01 \x01(\x04R\tartisanId\"L\n" +
@@ -965,7 +1032,7 @@ func file_intrufix_account_v1_account_proto_rawDescGZIP() []byte {
 	return file_intrufix_account_v1_account_proto_rawDescData
 }
 
-var file_intrufix_account_v1_account_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_intrufix_account_v1_account_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_intrufix_account_v1_account_proto_goTypes = []any{
 	(*User)(nil),                       // 0: intrufix.account.v1.User
 	(*Artisan)(nil),                    // 1: intrufix.account.v1.Artisan
@@ -983,33 +1050,35 @@ var file_intrufix_account_v1_account_proto_goTypes = []any{
 	(*UnsuspendUserResponse)(nil),      // 13: intrufix.account.v1.UnsuspendUserResponse
 	(*SetArtisanVerifiedRequest)(nil),  // 14: intrufix.account.v1.SetArtisanVerifiedRequest
 	(*SetArtisanVerifiedResponse)(nil), // 15: intrufix.account.v1.SetArtisanVerifiedResponse
-	(*timestamppb.Timestamp)(nil),      // 16: google.protobuf.Timestamp
+	nil,                                // 16: intrufix.account.v1.Artisan.OtherTradesEntry
+	(*timestamppb.Timestamp)(nil),      // 17: google.protobuf.Timestamp
 }
 var file_intrufix_account_v1_account_proto_depIdxs = []int32{
-	16, // 0: intrufix.account.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	1,  // 1: intrufix.account.v1.GetArtisanResponse.artisan:type_name -> intrufix.account.v1.Artisan
-	1,  // 2: intrufix.account.v1.ListArtisansResponse.artisans:type_name -> intrufix.account.v1.Artisan
-	0,  // 3: intrufix.account.v1.GetUserResponse.user:type_name -> intrufix.account.v1.User
-	0,  // 4: intrufix.account.v1.BatchGetUsersResponse.users:type_name -> intrufix.account.v1.User
-	6,  // 5: intrufix.account.v1.UserService.GetUser:input_type -> intrufix.account.v1.GetUserRequest
-	8,  // 6: intrufix.account.v1.UserService.BatchGetUsers:input_type -> intrufix.account.v1.BatchGetUsersRequest
-	2,  // 7: intrufix.account.v1.ArtisanService.GetArtisan:input_type -> intrufix.account.v1.GetArtisanRequest
-	4,  // 8: intrufix.account.v1.ArtisanService.ListArtisans:input_type -> intrufix.account.v1.ListArtisansRequest
-	10, // 9: intrufix.account.v1.AdminService.SuspendUser:input_type -> intrufix.account.v1.SuspendUserRequest
-	12, // 10: intrufix.account.v1.AdminService.UnsuspendUser:input_type -> intrufix.account.v1.UnsuspendUserRequest
-	14, // 11: intrufix.account.v1.AdminService.SetArtisanVerified:input_type -> intrufix.account.v1.SetArtisanVerifiedRequest
-	7,  // 12: intrufix.account.v1.UserService.GetUser:output_type -> intrufix.account.v1.GetUserResponse
-	9,  // 13: intrufix.account.v1.UserService.BatchGetUsers:output_type -> intrufix.account.v1.BatchGetUsersResponse
-	3,  // 14: intrufix.account.v1.ArtisanService.GetArtisan:output_type -> intrufix.account.v1.GetArtisanResponse
-	5,  // 15: intrufix.account.v1.ArtisanService.ListArtisans:output_type -> intrufix.account.v1.ListArtisansResponse
-	11, // 16: intrufix.account.v1.AdminService.SuspendUser:output_type -> intrufix.account.v1.SuspendUserResponse
-	13, // 17: intrufix.account.v1.AdminService.UnsuspendUser:output_type -> intrufix.account.v1.UnsuspendUserResponse
-	15, // 18: intrufix.account.v1.AdminService.SetArtisanVerified:output_type -> intrufix.account.v1.SetArtisanVerifiedResponse
-	12, // [12:19] is the sub-list for method output_type
-	5,  // [5:12] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	17, // 0: intrufix.account.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	16, // 1: intrufix.account.v1.Artisan.other_trades:type_name -> intrufix.account.v1.Artisan.OtherTradesEntry
+	1,  // 2: intrufix.account.v1.GetArtisanResponse.artisan:type_name -> intrufix.account.v1.Artisan
+	1,  // 3: intrufix.account.v1.ListArtisansResponse.artisans:type_name -> intrufix.account.v1.Artisan
+	0,  // 4: intrufix.account.v1.GetUserResponse.user:type_name -> intrufix.account.v1.User
+	0,  // 5: intrufix.account.v1.BatchGetUsersResponse.users:type_name -> intrufix.account.v1.User
+	6,  // 6: intrufix.account.v1.UserService.GetUser:input_type -> intrufix.account.v1.GetUserRequest
+	8,  // 7: intrufix.account.v1.UserService.BatchGetUsers:input_type -> intrufix.account.v1.BatchGetUsersRequest
+	2,  // 8: intrufix.account.v1.ArtisanService.GetArtisan:input_type -> intrufix.account.v1.GetArtisanRequest
+	4,  // 9: intrufix.account.v1.ArtisanService.ListArtisans:input_type -> intrufix.account.v1.ListArtisansRequest
+	10, // 10: intrufix.account.v1.AdminService.SuspendUser:input_type -> intrufix.account.v1.SuspendUserRequest
+	12, // 11: intrufix.account.v1.AdminService.UnsuspendUser:input_type -> intrufix.account.v1.UnsuspendUserRequest
+	14, // 12: intrufix.account.v1.AdminService.SetArtisanVerified:input_type -> intrufix.account.v1.SetArtisanVerifiedRequest
+	7,  // 13: intrufix.account.v1.UserService.GetUser:output_type -> intrufix.account.v1.GetUserResponse
+	9,  // 14: intrufix.account.v1.UserService.BatchGetUsers:output_type -> intrufix.account.v1.BatchGetUsersResponse
+	3,  // 15: intrufix.account.v1.ArtisanService.GetArtisan:output_type -> intrufix.account.v1.GetArtisanResponse
+	5,  // 16: intrufix.account.v1.ArtisanService.ListArtisans:output_type -> intrufix.account.v1.ListArtisansResponse
+	11, // 17: intrufix.account.v1.AdminService.SuspendUser:output_type -> intrufix.account.v1.SuspendUserResponse
+	13, // 18: intrufix.account.v1.AdminService.UnsuspendUser:output_type -> intrufix.account.v1.UnsuspendUserResponse
+	15, // 19: intrufix.account.v1.AdminService.SetArtisanVerified:output_type -> intrufix.account.v1.SetArtisanVerifiedResponse
+	13, // [13:20] is the sub-list for method output_type
+	6,  // [6:13] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_intrufix_account_v1_account_proto_init() }
@@ -1023,7 +1092,7 @@ func file_intrufix_account_v1_account_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_intrufix_account_v1_account_proto_rawDesc), len(file_intrufix_account_v1_account_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   3,
 		},

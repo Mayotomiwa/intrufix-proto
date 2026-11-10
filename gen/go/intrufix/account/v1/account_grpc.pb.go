@@ -179,13 +179,13 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// ArtisanService gives other services read access to artisan profiles. An
-// artisan is a user who has set up an artisan profile. The profile has its own
-// ID, which is what customers see, so a customer can't link the artisan they
-// hired to that person's customer account.
+// ArtisanService gives other services read access to artisans. An artisan is
+// a user who has submitted an artisan application; they keep their one user
+// ID, and the session's mode says whether they're acting as a customer or an
+// artisan.
 // Callers: core, admin.
 type ArtisanServiceClient interface {
-	// Returns NOT_FOUND if there is no artisan profile with this ID.
+	// Returns NOT_FOUND if the user has no artisan application.
 	GetArtisan(ctx context.Context, in *GetArtisanRequest, opts ...grpc.CallOption) (*GetArtisanResponse, error)
 	// Lists the artisans customers can hire for a service type: active, not
 	// suspended, verified first. At most 50.
@@ -224,13 +224,13 @@ func (c *artisanServiceClient) ListArtisans(ctx context.Context, in *ListArtisan
 // All implementations must embed UnimplementedArtisanServiceServer
 // for forward compatibility.
 //
-// ArtisanService gives other services read access to artisan profiles. An
-// artisan is a user who has set up an artisan profile. The profile has its own
-// ID, which is what customers see, so a customer can't link the artisan they
-// hired to that person's customer account.
+// ArtisanService gives other services read access to artisans. An artisan is
+// a user who has submitted an artisan application; they keep their one user
+// ID, and the session's mode says whether they're acting as a customer or an
+// artisan.
 // Callers: core, admin.
 type ArtisanServiceServer interface {
-	// Returns NOT_FOUND if there is no artisan profile with this ID.
+	// Returns NOT_FOUND if the user has no artisan application.
 	GetArtisan(context.Context, *GetArtisanRequest) (*GetArtisanResponse, error)
 	// Lists the artisans customers can hire for a service type: active, not
 	// suspended, verified first. At most 50.
