@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package intrufix.account.v1;
 
+import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 // Internal API of intrufix-account, served over gRPC on the private network
@@ -39,6 +40,15 @@ service ArtisanService {
   rpc ListArtisans(ListArtisansRequest) returns (ListArtisansResponse);
 }
 
+// WithdrawalPinService checks the PIN users approve withdrawals with.
+// Callers: core.
+service WithdrawalPinService {
+  // Checks pin against the user's withdrawal PIN. A wrong PIN counts towards
+  // the same lockout as checks from the app. The outcome is in the response;
+  // an error status means the PIN couldn't be checked.
+  rpc VerifyWithdrawalPin(VerifyWithdrawalPinRequest) returns (VerifyWithdrawalPinResponse);
+}
+
 // AdminService covers administrative actions on users.
 // Callers: admin only. Send the acting admin's ID as "x-admin-id" metadata;
 // account writes it to the audit log.
@@ -61,6 +71,10 @@ message User {
   string onboarding_stage = 6;
   bool suspended = 7;
   google.protobuf.Timestamp created_at = 8;
+  // Where the user said they are, if the app had a position; both or
+  // neither.
+  optional double latitude = 9;
+  optional double longitude = 10;
 }
 
 message Artisan {
@@ -96,6 +110,16 @@ message Artisan {
   string full_name = 17;
   string business_name = 18;
   uint32 years_of_experience = 19;
+  // Where they work from, as they gave it, e.g. "Lekki, Lagos".
+  string location = 20;
+  // More on where, e.g. a landmark; may be empty.
+  string location_detail = 21;
+  // How far from location they'll travel for a job.
+  uint32 coverage_radius_km = 22;
+  // The artisan's position from their profile, if the app had one; both or
+  // neither.
+  optional double latitude = 23;
+  optional double longitude = 24;
 }
 
 message GetArtisanRequest {
@@ -132,6 +156,28 @@ message BatchGetUsersRequest {
 
 message BatchGetUsersResponse {
   repeated User users = 1;
+}
+
+message VerifyWithdrawalPinRequest {
+  uint64 user_id = 1;
+  string pin = 2;
+}
+
+message VerifyWithdrawalPinResponse {
+  enum Result {
+    RESULT_UNSPECIFIED = 0;
+    RESULT_OK = 1;
+    RESULT_INCORRECT = 2;
+    // Too many wrong PINs; nothing is checked until retry_after passes.
+    RESULT_LOCKED = 3;
+    // The user hasn't created a withdrawal PIN.
+    RESULT_NOT_SET = 4;
+  }
+  Result result = 1;
+  // With RESULT_INCORRECT: wrong PINs left before it locks.
+  uint32 attempts_left = 2;
+  // With RESULT_LOCKED: how long until the PIN can be tried again.
+  google.protobuf.Duration retry_after = 3;
 }
 
 message SuspendUserRequest {
