@@ -329,6 +329,120 @@ var ArtisanService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
+	WithdrawalPinService_VerifyWithdrawalPin_FullMethodName = "/intrufix.account.v1.WithdrawalPinService/VerifyWithdrawalPin"
+)
+
+// WithdrawalPinServiceClient is the client API for WithdrawalPinService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// WithdrawalPinService checks the PIN users approve withdrawals with.
+// Callers: core.
+type WithdrawalPinServiceClient interface {
+	// Checks pin against the user's withdrawal PIN. A wrong PIN counts towards
+	// the same lockout as checks from the app. The outcome is in the response;
+	// an error status means the PIN couldn't be checked.
+	VerifyWithdrawalPin(ctx context.Context, in *VerifyWithdrawalPinRequest, opts ...grpc.CallOption) (*VerifyWithdrawalPinResponse, error)
+}
+
+type withdrawalPinServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewWithdrawalPinServiceClient(cc grpc.ClientConnInterface) WithdrawalPinServiceClient {
+	return &withdrawalPinServiceClient{cc}
+}
+
+func (c *withdrawalPinServiceClient) VerifyWithdrawalPin(ctx context.Context, in *VerifyWithdrawalPinRequest, opts ...grpc.CallOption) (*VerifyWithdrawalPinResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(VerifyWithdrawalPinResponse)
+	err := c.cc.Invoke(ctx, WithdrawalPinService_VerifyWithdrawalPin_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// WithdrawalPinServiceServer is the server API for WithdrawalPinService service.
+// All implementations must embed UnimplementedWithdrawalPinServiceServer
+// for forward compatibility.
+//
+// WithdrawalPinService checks the PIN users approve withdrawals with.
+// Callers: core.
+type WithdrawalPinServiceServer interface {
+	// Checks pin against the user's withdrawal PIN. A wrong PIN counts towards
+	// the same lockout as checks from the app. The outcome is in the response;
+	// an error status means the PIN couldn't be checked.
+	VerifyWithdrawalPin(context.Context, *VerifyWithdrawalPinRequest) (*VerifyWithdrawalPinResponse, error)
+	mustEmbedUnimplementedWithdrawalPinServiceServer()
+}
+
+// UnimplementedWithdrawalPinServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedWithdrawalPinServiceServer struct{}
+
+func (UnimplementedWithdrawalPinServiceServer) VerifyWithdrawalPin(context.Context, *VerifyWithdrawalPinRequest) (*VerifyWithdrawalPinResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method VerifyWithdrawalPin not implemented")
+}
+func (UnimplementedWithdrawalPinServiceServer) mustEmbedUnimplementedWithdrawalPinServiceServer() {}
+func (UnimplementedWithdrawalPinServiceServer) testEmbeddedByValue()                              {}
+
+// UnsafeWithdrawalPinServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to WithdrawalPinServiceServer will
+// result in compilation errors.
+type UnsafeWithdrawalPinServiceServer interface {
+	mustEmbedUnimplementedWithdrawalPinServiceServer()
+}
+
+func RegisterWithdrawalPinServiceServer(s grpc.ServiceRegistrar, srv WithdrawalPinServiceServer) {
+	// If the following call panics, it indicates UnimplementedWithdrawalPinServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&WithdrawalPinService_ServiceDesc, srv)
+}
+
+func _WithdrawalPinService_VerifyWithdrawalPin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyWithdrawalPinRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WithdrawalPinServiceServer).VerifyWithdrawalPin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WithdrawalPinService_VerifyWithdrawalPin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WithdrawalPinServiceServer).VerifyWithdrawalPin(ctx, req.(*VerifyWithdrawalPinRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// WithdrawalPinService_ServiceDesc is the grpc.ServiceDesc for WithdrawalPinService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var WithdrawalPinService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "intrufix.account.v1.WithdrawalPinService",
+	HandlerType: (*WithdrawalPinServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "VerifyWithdrawalPin",
+			Handler:    _WithdrawalPinService_VerifyWithdrawalPin_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "intrufix/account/v1/account.proto",
+}
+
+const (
 	AdminService_SuspendUser_FullMethodName        = "/intrufix.account.v1.AdminService/SuspendUser"
 	AdminService_UnsuspendUser_FullMethodName      = "/intrufix.account.v1.AdminService/UnsuspendUser"
 	AdminService_SetArtisanVerified_FullMethodName = "/intrufix.account.v1.AdminService/SetArtisanVerified"

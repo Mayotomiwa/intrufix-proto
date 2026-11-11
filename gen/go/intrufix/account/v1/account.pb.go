@@ -9,6 +9,7 @@ package accountv1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -22,6 +23,63 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type VerifyWithdrawalPinResponse_Result int32
+
+const (
+	VerifyWithdrawalPinResponse_RESULT_UNSPECIFIED VerifyWithdrawalPinResponse_Result = 0
+	VerifyWithdrawalPinResponse_RESULT_OK          VerifyWithdrawalPinResponse_Result = 1
+	VerifyWithdrawalPinResponse_RESULT_INCORRECT   VerifyWithdrawalPinResponse_Result = 2
+	// Too many wrong PINs; nothing is checked until retry_after passes.
+	VerifyWithdrawalPinResponse_RESULT_LOCKED VerifyWithdrawalPinResponse_Result = 3
+	// The user hasn't created a withdrawal PIN.
+	VerifyWithdrawalPinResponse_RESULT_NOT_SET VerifyWithdrawalPinResponse_Result = 4
+)
+
+// Enum value maps for VerifyWithdrawalPinResponse_Result.
+var (
+	VerifyWithdrawalPinResponse_Result_name = map[int32]string{
+		0: "RESULT_UNSPECIFIED",
+		1: "RESULT_OK",
+		2: "RESULT_INCORRECT",
+		3: "RESULT_LOCKED",
+		4: "RESULT_NOT_SET",
+	}
+	VerifyWithdrawalPinResponse_Result_value = map[string]int32{
+		"RESULT_UNSPECIFIED": 0,
+		"RESULT_OK":          1,
+		"RESULT_INCORRECT":   2,
+		"RESULT_LOCKED":      3,
+		"RESULT_NOT_SET":     4,
+	}
+)
+
+func (x VerifyWithdrawalPinResponse_Result) Enum() *VerifyWithdrawalPinResponse_Result {
+	p := new(VerifyWithdrawalPinResponse_Result)
+	*p = x
+	return p
+}
+
+func (x VerifyWithdrawalPinResponse_Result) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (VerifyWithdrawalPinResponse_Result) Descriptor() protoreflect.EnumDescriptor {
+	return file_intrufix_account_v1_account_proto_enumTypes[0].Descriptor()
+}
+
+func (VerifyWithdrawalPinResponse_Result) Type() protoreflect.EnumType {
+	return &file_intrufix_account_v1_account_proto_enumTypes[0]
+}
+
+func (x VerifyWithdrawalPinResponse_Result) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use VerifyWithdrawalPinResponse_Result.Descriptor instead.
+func (VerifyWithdrawalPinResponse_Result) EnumDescriptor() ([]byte, []int) {
+	return file_intrufix_account_v1_account_proto_rawDescGZIP(), []int{11, 0}
+}
+
 type User struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Id              uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -32,8 +90,12 @@ type User struct {
 	OnboardingStage string                 `protobuf:"bytes,6,opt,name=onboarding_stage,json=onboardingStage,proto3" json:"onboarding_stage,omitempty"`
 	Suspended       bool                   `protobuf:"varint,7,opt,name=suspended,proto3" json:"suspended,omitempty"`
 	CreatedAt       *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// Where the user said they are, if the app had a position; both or
+	// neither.
+	Latitude      *float64 `protobuf:"fixed64,9,opt,name=latitude,proto3,oneof" json:"latitude,omitempty"`
+	Longitude     *float64 `protobuf:"fixed64,10,opt,name=longitude,proto3,oneof" json:"longitude,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *User) Reset() {
@@ -122,6 +184,20 @@ func (x *User) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *User) GetLatitude() float64 {
+	if x != nil && x.Latitude != nil {
+		return *x.Latitude
+	}
+	return 0
+}
+
+func (x *User) GetLongitude() float64 {
+	if x != nil && x.Longitude != nil {
+		return *x.Longitude
+	}
+	return 0
+}
+
 type Artisan struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The artisan's user ID. Same as user_id: a person has one ID.
@@ -157,8 +233,18 @@ type Artisan struct {
 	FullName          string `protobuf:"bytes,17,opt,name=full_name,json=fullName,proto3" json:"full_name,omitempty"`
 	BusinessName      string `protobuf:"bytes,18,opt,name=business_name,json=businessName,proto3" json:"business_name,omitempty"`
 	YearsOfExperience uint32 `protobuf:"varint,19,opt,name=years_of_experience,json=yearsOfExperience,proto3" json:"years_of_experience,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	// Where they work from, as they gave it, e.g. "Lekki, Lagos".
+	Location string `protobuf:"bytes,20,opt,name=location,proto3" json:"location,omitempty"`
+	// More on where, e.g. a landmark; may be empty.
+	LocationDetail string `protobuf:"bytes,21,opt,name=location_detail,json=locationDetail,proto3" json:"location_detail,omitempty"`
+	// How far from location they'll travel for a job.
+	CoverageRadiusKm uint32 `protobuf:"varint,22,opt,name=coverage_radius_km,json=coverageRadiusKm,proto3" json:"coverage_radius_km,omitempty"`
+	// The artisan's position from their profile, if the app had one; both or
+	// neither.
+	Latitude      *float64 `protobuf:"fixed64,23,opt,name=latitude,proto3,oneof" json:"latitude,omitempty"`
+	Longitude     *float64 `protobuf:"fixed64,24,opt,name=longitude,proto3,oneof" json:"longitude,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Artisan) Reset() {
@@ -321,6 +407,41 @@ func (x *Artisan) GetBusinessName() string {
 func (x *Artisan) GetYearsOfExperience() uint32 {
 	if x != nil {
 		return x.YearsOfExperience
+	}
+	return 0
+}
+
+func (x *Artisan) GetLocation() string {
+	if x != nil {
+		return x.Location
+	}
+	return ""
+}
+
+func (x *Artisan) GetLocationDetail() string {
+	if x != nil {
+		return x.LocationDetail
+	}
+	return ""
+}
+
+func (x *Artisan) GetCoverageRadiusKm() uint32 {
+	if x != nil {
+		return x.CoverageRadiusKm
+	}
+	return 0
+}
+
+func (x *Artisan) GetLatitude() float64 {
+	if x != nil && x.Latitude != nil {
+		return *x.Latitude
+	}
+	return 0
+}
+
+func (x *Artisan) GetLongitude() float64 {
+	if x != nil && x.Longitude != nil {
+		return *x.Longitude
 	}
 	return 0
 }
@@ -688,6 +809,120 @@ func (x *BatchGetUsersResponse) GetUsers() []*User {
 	return nil
 }
 
+type VerifyWithdrawalPinRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Pin           string                 `protobuf:"bytes,2,opt,name=pin,proto3" json:"pin,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VerifyWithdrawalPinRequest) Reset() {
+	*x = VerifyWithdrawalPinRequest{}
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VerifyWithdrawalPinRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VerifyWithdrawalPinRequest) ProtoMessage() {}
+
+func (x *VerifyWithdrawalPinRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VerifyWithdrawalPinRequest.ProtoReflect.Descriptor instead.
+func (*VerifyWithdrawalPinRequest) Descriptor() ([]byte, []int) {
+	return file_intrufix_account_v1_account_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *VerifyWithdrawalPinRequest) GetUserId() uint64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
+func (x *VerifyWithdrawalPinRequest) GetPin() string {
+	if x != nil {
+		return x.Pin
+	}
+	return ""
+}
+
+type VerifyWithdrawalPinResponse struct {
+	state  protoimpl.MessageState             `protogen:"open.v1"`
+	Result VerifyWithdrawalPinResponse_Result `protobuf:"varint,1,opt,name=result,proto3,enum=intrufix.account.v1.VerifyWithdrawalPinResponse_Result" json:"result,omitempty"`
+	// With RESULT_INCORRECT: wrong PINs left before it locks.
+	AttemptsLeft uint32 `protobuf:"varint,2,opt,name=attempts_left,json=attemptsLeft,proto3" json:"attempts_left,omitempty"`
+	// With RESULT_LOCKED: how long until the PIN can be tried again.
+	RetryAfter    *durationpb.Duration `protobuf:"bytes,3,opt,name=retry_after,json=retryAfter,proto3" json:"retry_after,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VerifyWithdrawalPinResponse) Reset() {
+	*x = VerifyWithdrawalPinResponse{}
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VerifyWithdrawalPinResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VerifyWithdrawalPinResponse) ProtoMessage() {}
+
+func (x *VerifyWithdrawalPinResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VerifyWithdrawalPinResponse.ProtoReflect.Descriptor instead.
+func (*VerifyWithdrawalPinResponse) Descriptor() ([]byte, []int) {
+	return file_intrufix_account_v1_account_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *VerifyWithdrawalPinResponse) GetResult() VerifyWithdrawalPinResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return VerifyWithdrawalPinResponse_RESULT_UNSPECIFIED
+}
+
+func (x *VerifyWithdrawalPinResponse) GetAttemptsLeft() uint32 {
+	if x != nil {
+		return x.AttemptsLeft
+	}
+	return 0
+}
+
+func (x *VerifyWithdrawalPinResponse) GetRetryAfter() *durationpb.Duration {
+	if x != nil {
+		return x.RetryAfter
+	}
+	return nil
+}
+
 type SuspendUserRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        uint64                 `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
@@ -697,7 +932,7 @@ type SuspendUserRequest struct {
 
 func (x *SuspendUserRequest) Reset() {
 	*x = SuspendUserRequest{}
-	mi := &file_intrufix_account_v1_account_proto_msgTypes[10]
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -709,7 +944,7 @@ func (x *SuspendUserRequest) String() string {
 func (*SuspendUserRequest) ProtoMessage() {}
 
 func (x *SuspendUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_intrufix_account_v1_account_proto_msgTypes[10]
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -722,7 +957,7 @@ func (x *SuspendUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuspendUserRequest.ProtoReflect.Descriptor instead.
 func (*SuspendUserRequest) Descriptor() ([]byte, []int) {
-	return file_intrufix_account_v1_account_proto_rawDescGZIP(), []int{10}
+	return file_intrufix_account_v1_account_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *SuspendUserRequest) GetUserId() uint64 {
@@ -740,7 +975,7 @@ type SuspendUserResponse struct {
 
 func (x *SuspendUserResponse) Reset() {
 	*x = SuspendUserResponse{}
-	mi := &file_intrufix_account_v1_account_proto_msgTypes[11]
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -752,7 +987,7 @@ func (x *SuspendUserResponse) String() string {
 func (*SuspendUserResponse) ProtoMessage() {}
 
 func (x *SuspendUserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_intrufix_account_v1_account_proto_msgTypes[11]
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -765,7 +1000,7 @@ func (x *SuspendUserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuspendUserResponse.ProtoReflect.Descriptor instead.
 func (*SuspendUserResponse) Descriptor() ([]byte, []int) {
-	return file_intrufix_account_v1_account_proto_rawDescGZIP(), []int{11}
+	return file_intrufix_account_v1_account_proto_rawDescGZIP(), []int{13}
 }
 
 type UnsuspendUserRequest struct {
@@ -777,7 +1012,7 @@ type UnsuspendUserRequest struct {
 
 func (x *UnsuspendUserRequest) Reset() {
 	*x = UnsuspendUserRequest{}
-	mi := &file_intrufix_account_v1_account_proto_msgTypes[12]
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -789,7 +1024,7 @@ func (x *UnsuspendUserRequest) String() string {
 func (*UnsuspendUserRequest) ProtoMessage() {}
 
 func (x *UnsuspendUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_intrufix_account_v1_account_proto_msgTypes[12]
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -802,7 +1037,7 @@ func (x *UnsuspendUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnsuspendUserRequest.ProtoReflect.Descriptor instead.
 func (*UnsuspendUserRequest) Descriptor() ([]byte, []int) {
-	return file_intrufix_account_v1_account_proto_rawDescGZIP(), []int{12}
+	return file_intrufix_account_v1_account_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *UnsuspendUserRequest) GetUserId() uint64 {
@@ -820,7 +1055,7 @@ type UnsuspendUserResponse struct {
 
 func (x *UnsuspendUserResponse) Reset() {
 	*x = UnsuspendUserResponse{}
-	mi := &file_intrufix_account_v1_account_proto_msgTypes[13]
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -832,7 +1067,7 @@ func (x *UnsuspendUserResponse) String() string {
 func (*UnsuspendUserResponse) ProtoMessage() {}
 
 func (x *UnsuspendUserResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_intrufix_account_v1_account_proto_msgTypes[13]
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -845,7 +1080,7 @@ func (x *UnsuspendUserResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnsuspendUserResponse.ProtoReflect.Descriptor instead.
 func (*UnsuspendUserResponse) Descriptor() ([]byte, []int) {
-	return file_intrufix_account_v1_account_proto_rawDescGZIP(), []int{13}
+	return file_intrufix_account_v1_account_proto_rawDescGZIP(), []int{15}
 }
 
 type SetArtisanVerifiedRequest struct {
@@ -858,7 +1093,7 @@ type SetArtisanVerifiedRequest struct {
 
 func (x *SetArtisanVerifiedRequest) Reset() {
 	*x = SetArtisanVerifiedRequest{}
-	mi := &file_intrufix_account_v1_account_proto_msgTypes[14]
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -870,7 +1105,7 @@ func (x *SetArtisanVerifiedRequest) String() string {
 func (*SetArtisanVerifiedRequest) ProtoMessage() {}
 
 func (x *SetArtisanVerifiedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_intrufix_account_v1_account_proto_msgTypes[14]
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -883,7 +1118,7 @@ func (x *SetArtisanVerifiedRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetArtisanVerifiedRequest.ProtoReflect.Descriptor instead.
 func (*SetArtisanVerifiedRequest) Descriptor() ([]byte, []int) {
-	return file_intrufix_account_v1_account_proto_rawDescGZIP(), []int{14}
+	return file_intrufix_account_v1_account_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *SetArtisanVerifiedRequest) GetArtisanId() uint64 {
@@ -908,7 +1143,7 @@ type SetArtisanVerifiedResponse struct {
 
 func (x *SetArtisanVerifiedResponse) Reset() {
 	*x = SetArtisanVerifiedResponse{}
-	mi := &file_intrufix_account_v1_account_proto_msgTypes[15]
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -920,7 +1155,7 @@ func (x *SetArtisanVerifiedResponse) String() string {
 func (*SetArtisanVerifiedResponse) ProtoMessage() {}
 
 func (x *SetArtisanVerifiedResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_intrufix_account_v1_account_proto_msgTypes[15]
+	mi := &file_intrufix_account_v1_account_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -933,14 +1168,14 @@ func (x *SetArtisanVerifiedResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetArtisanVerifiedResponse.ProtoReflect.Descriptor instead.
 func (*SetArtisanVerifiedResponse) Descriptor() ([]byte, []int) {
-	return file_intrufix_account_v1_account_proto_rawDescGZIP(), []int{15}
+	return file_intrufix_account_v1_account_proto_rawDescGZIP(), []int{17}
 }
 
 var File_intrufix_account_v1_account_proto protoreflect.FileDescriptor
 
 const file_intrufix_account_v1_account_proto_rawDesc = "" +
 	"\n" +
-	"!intrufix/account/v1/account.proto\x12\x13intrufix.account.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x82\x02\n" +
+	"!intrufix/account/v1/account.proto\x12\x13intrufix.account.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xe1\x02\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x14\n" +
@@ -951,7 +1186,13 @@ const file_intrufix_account_v1_account_proto_rawDesc = "" +
 	"\x10onboarding_stage\x18\x06 \x01(\tR\x0fonboardingStage\x12\x1c\n" +
 	"\tsuspended\x18\a \x01(\bR\tsuspended\x129\n" +
 	"\n" +
-	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\xc4\x05\n" +
+	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12\x1f\n" +
+	"\blatitude\x18\t \x01(\x01H\x00R\blatitude\x88\x01\x01\x12!\n" +
+	"\tlongitude\x18\n" +
+	" \x01(\x01H\x01R\tlongitude\x88\x01\x01B\v\n" +
+	"\t_latitudeB\f\n" +
+	"\n" +
+	"_longitude\"\x96\a\n" +
 	"\aArtisan\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\x04R\x06userId\x12!\n" +
@@ -974,10 +1215,18 @@ const file_intrufix_account_v1_account_proto_rawDesc = "" +
 	"\x12application_status\x18\x10 \x01(\tR\x11applicationStatus\x12\x1b\n" +
 	"\tfull_name\x18\x11 \x01(\tR\bfullName\x12#\n" +
 	"\rbusiness_name\x18\x12 \x01(\tR\fbusinessName\x12.\n" +
-	"\x13years_of_experience\x18\x13 \x01(\rR\x11yearsOfExperience\x1a>\n" +
+	"\x13years_of_experience\x18\x13 \x01(\rR\x11yearsOfExperience\x12\x1a\n" +
+	"\blocation\x18\x14 \x01(\tR\blocation\x12'\n" +
+	"\x0flocation_detail\x18\x15 \x01(\tR\x0elocationDetail\x12,\n" +
+	"\x12coverage_radius_km\x18\x16 \x01(\rR\x10coverageRadiusKm\x12\x1f\n" +
+	"\blatitude\x18\x17 \x01(\x01H\x00R\blatitude\x88\x01\x01\x12!\n" +
+	"\tlongitude\x18\x18 \x01(\x01H\x01R\tlongitude\x88\x01\x01\x1a>\n" +
 	"\x10OtherTradesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"2\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\v\n" +
+	"\t_latitudeB\f\n" +
+	"\n" +
+	"_longitude\"2\n" +
 	"\x11GetArtisanRequest\x12\x1d\n" +
 	"\n" +
 	"artisan_id\x18\x01 \x01(\x04R\tartisanId\"L\n" +
@@ -995,7 +1244,21 @@ const file_intrufix_account_v1_account_proto_rawDesc = "" +
 	"\x14BatchGetUsersRequest\x12\x19\n" +
 	"\buser_ids\x18\x01 \x03(\x04R\auserIds\"H\n" +
 	"\x15BatchGetUsersResponse\x12/\n" +
-	"\x05users\x18\x01 \x03(\v2\x19.intrufix.account.v1.UserR\x05users\"-\n" +
+	"\x05users\x18\x01 \x03(\v2\x19.intrufix.account.v1.UserR\x05users\"G\n" +
+	"\x1aVerifyWithdrawalPinRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x10\n" +
+	"\x03pin\x18\x02 \x01(\tR\x03pin\"\xbd\x02\n" +
+	"\x1bVerifyWithdrawalPinResponse\x12O\n" +
+	"\x06result\x18\x01 \x01(\x0e27.intrufix.account.v1.VerifyWithdrawalPinResponse.ResultR\x06result\x12#\n" +
+	"\rattempts_left\x18\x02 \x01(\rR\fattemptsLeft\x12:\n" +
+	"\vretry_after\x18\x03 \x01(\v2\x19.google.protobuf.DurationR\n" +
+	"retryAfter\"l\n" +
+	"\x06Result\x12\x16\n" +
+	"\x12RESULT_UNSPECIFIED\x10\x00\x12\r\n" +
+	"\tRESULT_OK\x10\x01\x12\x14\n" +
+	"\x10RESULT_INCORRECT\x10\x02\x12\x11\n" +
+	"\rRESULT_LOCKED\x10\x03\x12\x12\n" +
+	"\x0eRESULT_NOT_SET\x10\x04\"-\n" +
 	"\x12SuspendUserRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x04R\x06userId\"\x15\n" +
 	"\x13SuspendUserResponse\"/\n" +
@@ -1013,7 +1276,9 @@ const file_intrufix_account_v1_account_proto_rawDesc = "" +
 	"\x0eArtisanService\x12]\n" +
 	"\n" +
 	"GetArtisan\x12&.intrufix.account.v1.GetArtisanRequest\x1a'.intrufix.account.v1.GetArtisanResponse\x12c\n" +
-	"\fListArtisans\x12(.intrufix.account.v1.ListArtisansRequest\x1a).intrufix.account.v1.ListArtisansResponse2\xcf\x02\n" +
+	"\fListArtisans\x12(.intrufix.account.v1.ListArtisansRequest\x1a).intrufix.account.v1.ListArtisansResponse2\x90\x01\n" +
+	"\x14WithdrawalPinService\x12x\n" +
+	"\x13VerifyWithdrawalPin\x12/.intrufix.account.v1.VerifyWithdrawalPinRequest\x1a0.intrufix.account.v1.VerifyWithdrawalPinResponse2\xcf\x02\n" +
 	"\fAdminService\x12`\n" +
 	"\vSuspendUser\x12'.intrufix.account.v1.SuspendUserRequest\x1a(.intrufix.account.v1.SuspendUserResponse\x12f\n" +
 	"\rUnsuspendUser\x12).intrufix.account.v1.UnsuspendUserRequest\x1a*.intrufix.account.v1.UnsuspendUserResponse\x12u\n" +
@@ -1032,53 +1297,62 @@ func file_intrufix_account_v1_account_proto_rawDescGZIP() []byte {
 	return file_intrufix_account_v1_account_proto_rawDescData
 }
 
-var file_intrufix_account_v1_account_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_intrufix_account_v1_account_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_intrufix_account_v1_account_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_intrufix_account_v1_account_proto_goTypes = []any{
-	(*User)(nil),                       // 0: intrufix.account.v1.User
-	(*Artisan)(nil),                    // 1: intrufix.account.v1.Artisan
-	(*GetArtisanRequest)(nil),          // 2: intrufix.account.v1.GetArtisanRequest
-	(*GetArtisanResponse)(nil),         // 3: intrufix.account.v1.GetArtisanResponse
-	(*ListArtisansRequest)(nil),        // 4: intrufix.account.v1.ListArtisansRequest
-	(*ListArtisansResponse)(nil),       // 5: intrufix.account.v1.ListArtisansResponse
-	(*GetUserRequest)(nil),             // 6: intrufix.account.v1.GetUserRequest
-	(*GetUserResponse)(nil),            // 7: intrufix.account.v1.GetUserResponse
-	(*BatchGetUsersRequest)(nil),       // 8: intrufix.account.v1.BatchGetUsersRequest
-	(*BatchGetUsersResponse)(nil),      // 9: intrufix.account.v1.BatchGetUsersResponse
-	(*SuspendUserRequest)(nil),         // 10: intrufix.account.v1.SuspendUserRequest
-	(*SuspendUserResponse)(nil),        // 11: intrufix.account.v1.SuspendUserResponse
-	(*UnsuspendUserRequest)(nil),       // 12: intrufix.account.v1.UnsuspendUserRequest
-	(*UnsuspendUserResponse)(nil),      // 13: intrufix.account.v1.UnsuspendUserResponse
-	(*SetArtisanVerifiedRequest)(nil),  // 14: intrufix.account.v1.SetArtisanVerifiedRequest
-	(*SetArtisanVerifiedResponse)(nil), // 15: intrufix.account.v1.SetArtisanVerifiedResponse
-	nil,                                // 16: intrufix.account.v1.Artisan.OtherTradesEntry
-	(*timestamppb.Timestamp)(nil),      // 17: google.protobuf.Timestamp
+	(VerifyWithdrawalPinResponse_Result)(0), // 0: intrufix.account.v1.VerifyWithdrawalPinResponse.Result
+	(*User)(nil),                            // 1: intrufix.account.v1.User
+	(*Artisan)(nil),                         // 2: intrufix.account.v1.Artisan
+	(*GetArtisanRequest)(nil),               // 3: intrufix.account.v1.GetArtisanRequest
+	(*GetArtisanResponse)(nil),              // 4: intrufix.account.v1.GetArtisanResponse
+	(*ListArtisansRequest)(nil),             // 5: intrufix.account.v1.ListArtisansRequest
+	(*ListArtisansResponse)(nil),            // 6: intrufix.account.v1.ListArtisansResponse
+	(*GetUserRequest)(nil),                  // 7: intrufix.account.v1.GetUserRequest
+	(*GetUserResponse)(nil),                 // 8: intrufix.account.v1.GetUserResponse
+	(*BatchGetUsersRequest)(nil),            // 9: intrufix.account.v1.BatchGetUsersRequest
+	(*BatchGetUsersResponse)(nil),           // 10: intrufix.account.v1.BatchGetUsersResponse
+	(*VerifyWithdrawalPinRequest)(nil),      // 11: intrufix.account.v1.VerifyWithdrawalPinRequest
+	(*VerifyWithdrawalPinResponse)(nil),     // 12: intrufix.account.v1.VerifyWithdrawalPinResponse
+	(*SuspendUserRequest)(nil),              // 13: intrufix.account.v1.SuspendUserRequest
+	(*SuspendUserResponse)(nil),             // 14: intrufix.account.v1.SuspendUserResponse
+	(*UnsuspendUserRequest)(nil),            // 15: intrufix.account.v1.UnsuspendUserRequest
+	(*UnsuspendUserResponse)(nil),           // 16: intrufix.account.v1.UnsuspendUserResponse
+	(*SetArtisanVerifiedRequest)(nil),       // 17: intrufix.account.v1.SetArtisanVerifiedRequest
+	(*SetArtisanVerifiedResponse)(nil),      // 18: intrufix.account.v1.SetArtisanVerifiedResponse
+	nil,                                     // 19: intrufix.account.v1.Artisan.OtherTradesEntry
+	(*timestamppb.Timestamp)(nil),           // 20: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),             // 21: google.protobuf.Duration
 }
 var file_intrufix_account_v1_account_proto_depIdxs = []int32{
-	17, // 0: intrufix.account.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	16, // 1: intrufix.account.v1.Artisan.other_trades:type_name -> intrufix.account.v1.Artisan.OtherTradesEntry
-	1,  // 2: intrufix.account.v1.GetArtisanResponse.artisan:type_name -> intrufix.account.v1.Artisan
-	1,  // 3: intrufix.account.v1.ListArtisansResponse.artisans:type_name -> intrufix.account.v1.Artisan
-	0,  // 4: intrufix.account.v1.GetUserResponse.user:type_name -> intrufix.account.v1.User
-	0,  // 5: intrufix.account.v1.BatchGetUsersResponse.users:type_name -> intrufix.account.v1.User
-	6,  // 6: intrufix.account.v1.UserService.GetUser:input_type -> intrufix.account.v1.GetUserRequest
-	8,  // 7: intrufix.account.v1.UserService.BatchGetUsers:input_type -> intrufix.account.v1.BatchGetUsersRequest
-	2,  // 8: intrufix.account.v1.ArtisanService.GetArtisan:input_type -> intrufix.account.v1.GetArtisanRequest
-	4,  // 9: intrufix.account.v1.ArtisanService.ListArtisans:input_type -> intrufix.account.v1.ListArtisansRequest
-	10, // 10: intrufix.account.v1.AdminService.SuspendUser:input_type -> intrufix.account.v1.SuspendUserRequest
-	12, // 11: intrufix.account.v1.AdminService.UnsuspendUser:input_type -> intrufix.account.v1.UnsuspendUserRequest
-	14, // 12: intrufix.account.v1.AdminService.SetArtisanVerified:input_type -> intrufix.account.v1.SetArtisanVerifiedRequest
-	7,  // 13: intrufix.account.v1.UserService.GetUser:output_type -> intrufix.account.v1.GetUserResponse
-	9,  // 14: intrufix.account.v1.UserService.BatchGetUsers:output_type -> intrufix.account.v1.BatchGetUsersResponse
-	3,  // 15: intrufix.account.v1.ArtisanService.GetArtisan:output_type -> intrufix.account.v1.GetArtisanResponse
-	5,  // 16: intrufix.account.v1.ArtisanService.ListArtisans:output_type -> intrufix.account.v1.ListArtisansResponse
-	11, // 17: intrufix.account.v1.AdminService.SuspendUser:output_type -> intrufix.account.v1.SuspendUserResponse
-	13, // 18: intrufix.account.v1.AdminService.UnsuspendUser:output_type -> intrufix.account.v1.UnsuspendUserResponse
-	15, // 19: intrufix.account.v1.AdminService.SetArtisanVerified:output_type -> intrufix.account.v1.SetArtisanVerifiedResponse
-	13, // [13:20] is the sub-list for method output_type
-	6,  // [6:13] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	20, // 0: intrufix.account.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	19, // 1: intrufix.account.v1.Artisan.other_trades:type_name -> intrufix.account.v1.Artisan.OtherTradesEntry
+	2,  // 2: intrufix.account.v1.GetArtisanResponse.artisan:type_name -> intrufix.account.v1.Artisan
+	2,  // 3: intrufix.account.v1.ListArtisansResponse.artisans:type_name -> intrufix.account.v1.Artisan
+	1,  // 4: intrufix.account.v1.GetUserResponse.user:type_name -> intrufix.account.v1.User
+	1,  // 5: intrufix.account.v1.BatchGetUsersResponse.users:type_name -> intrufix.account.v1.User
+	0,  // 6: intrufix.account.v1.VerifyWithdrawalPinResponse.result:type_name -> intrufix.account.v1.VerifyWithdrawalPinResponse.Result
+	21, // 7: intrufix.account.v1.VerifyWithdrawalPinResponse.retry_after:type_name -> google.protobuf.Duration
+	7,  // 8: intrufix.account.v1.UserService.GetUser:input_type -> intrufix.account.v1.GetUserRequest
+	9,  // 9: intrufix.account.v1.UserService.BatchGetUsers:input_type -> intrufix.account.v1.BatchGetUsersRequest
+	3,  // 10: intrufix.account.v1.ArtisanService.GetArtisan:input_type -> intrufix.account.v1.GetArtisanRequest
+	5,  // 11: intrufix.account.v1.ArtisanService.ListArtisans:input_type -> intrufix.account.v1.ListArtisansRequest
+	11, // 12: intrufix.account.v1.WithdrawalPinService.VerifyWithdrawalPin:input_type -> intrufix.account.v1.VerifyWithdrawalPinRequest
+	13, // 13: intrufix.account.v1.AdminService.SuspendUser:input_type -> intrufix.account.v1.SuspendUserRequest
+	15, // 14: intrufix.account.v1.AdminService.UnsuspendUser:input_type -> intrufix.account.v1.UnsuspendUserRequest
+	17, // 15: intrufix.account.v1.AdminService.SetArtisanVerified:input_type -> intrufix.account.v1.SetArtisanVerifiedRequest
+	8,  // 16: intrufix.account.v1.UserService.GetUser:output_type -> intrufix.account.v1.GetUserResponse
+	10, // 17: intrufix.account.v1.UserService.BatchGetUsers:output_type -> intrufix.account.v1.BatchGetUsersResponse
+	4,  // 18: intrufix.account.v1.ArtisanService.GetArtisan:output_type -> intrufix.account.v1.GetArtisanResponse
+	6,  // 19: intrufix.account.v1.ArtisanService.ListArtisans:output_type -> intrufix.account.v1.ListArtisansResponse
+	12, // 20: intrufix.account.v1.WithdrawalPinService.VerifyWithdrawalPin:output_type -> intrufix.account.v1.VerifyWithdrawalPinResponse
+	14, // 21: intrufix.account.v1.AdminService.SuspendUser:output_type -> intrufix.account.v1.SuspendUserResponse
+	16, // 22: intrufix.account.v1.AdminService.UnsuspendUser:output_type -> intrufix.account.v1.UnsuspendUserResponse
+	18, // 23: intrufix.account.v1.AdminService.SetArtisanVerified:output_type -> intrufix.account.v1.SetArtisanVerifiedResponse
+	16, // [16:24] is the sub-list for method output_type
+	8,  // [8:16] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_intrufix_account_v1_account_proto_init() }
@@ -1086,18 +1360,21 @@ func file_intrufix_account_v1_account_proto_init() {
 	if File_intrufix_account_v1_account_proto != nil {
 		return
 	}
+	file_intrufix_account_v1_account_proto_msgTypes[0].OneofWrappers = []any{}
+	file_intrufix_account_v1_account_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_intrufix_account_v1_account_proto_rawDesc), len(file_intrufix_account_v1_account_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   17,
+			NumEnums:      1,
+			NumMessages:   19,
 			NumExtensions: 0,
-			NumServices:   3,
+			NumServices:   4,
 		},
 		GoTypes:           file_intrufix_account_v1_account_proto_goTypes,
 		DependencyIndexes: file_intrufix_account_v1_account_proto_depIdxs,
+		EnumInfos:         file_intrufix_account_v1_account_proto_enumTypes,
 		MessageInfos:      file_intrufix_account_v1_account_proto_msgTypes,
 	}.Build()
 	File_intrufix_account_v1_account_proto = out.File
