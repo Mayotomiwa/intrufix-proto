@@ -15,29 +15,16 @@ import "google/protobuf/timestamp.proto";
 // Compatibility rules: only add fields and RPCs. Never renumber, retype or
 // remove a field; reserve its number instead. `buf breaking` enforces this.
 
-// UserService gives other services read access to users.
+// ProfileService gives other services read access to users. A person has one
+// user ID and one profile; what they can do is in the profile's modes.
 // Callers: core, admin.
-service UserService {
+service ProfileService {
   // Returns NOT_FOUND if the user doesn't exist.
-  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
 
-  // Looks up to 100 users in one call. IDs that don't exist are left out of
-  // the response, so callers should index the result by ID.
-  rpc BatchGetUsers(BatchGetUsersRequest) returns (BatchGetUsersResponse);
-}
-
-// ArtisanService gives other services read access to artisans. An artisan is
-// a user who has submitted an artisan application; they keep their one user
-// ID, and the session's mode says whether they're acting as a customer or an
-// artisan.
-// Callers: core, admin.
-service ArtisanService {
-  // Returns NOT_FOUND if the user has no artisan application.
-  rpc GetArtisan(GetArtisanRequest) returns (GetArtisanResponse);
-
-  // Lists the artisans customers can hire for a service type: active, not
-  // suspended, verified first. At most 50.
-  rpc ListArtisans(ListArtisansRequest) returns (ListArtisansResponse);
+  // Looks up to 100 profiles in one call. IDs that don't exist are left out
+  // of the response, so callers should index the result by user_id.
+  rpc BatchGetProfiles(BatchGetProfilesRequest) returns (BatchGetProfilesResponse);
 }
 
 // WithdrawalPinService checks the PIN users approve withdrawals with.
@@ -62,100 +49,81 @@ service AdminService {
   rpc SetArtisanVerified(SetArtisanVerifiedRequest) returns (SetArtisanVerifiedResponse);
 }
 
-message User {
-  uint64 id = 1;
+message Profile {
+  uint64 user_id = 1;
   string email = 2;
   string phone = 3;
   string first_name = 4;
   string last_name = 5;
   string onboarding_stage = 6;
+  // A suspended user can't sign in, and none of their modes can be used.
   bool suspended = 7;
   google.protobuf.Timestamp created_at = 8;
-  // Where the user said they are, if the app had a position; both or
-  // neither.
-  optional double latitude = 9;
-  optional double longitude = 10;
+  // Where the user said they are, e.g. "Lekki, Lagos".
+  string location = 9;
+  // Their position, if the app had one; both or neither.
+  optional double latitude = 10;
+  optional double longitude = 11;
+  // The mode the user is acting in now; one of modes.
+  string active_mode = 12;
+  // Every mode the user has. Customer always; others once the user adds
+  // them.
+  repeated Mode modes = 13;
 }
 
-message Artisan {
-  // The artisan's user ID. Same as user_id: a person has one ID.
-  uint64 id = 1;
-  uint64 user_id = 2;
+// Mode is one side of the app a user has.
+message Mode {
+  // "customer" or "artisan".
+  string mode = 1;
+  // "active", "pending_review" or "rejected". Only an active mode can take
+  // part in the marketplace.
+  string status = 2;
+
+  // What the user gave when adding the mode; none for customer.
+  oneof details {
+    ArtisanDetails artisan = 10;
+  }
+}
+
+message ArtisanDetails {
+  string full_name = 1;
+  string business_name = 2;
   // The business name if they gave one, otherwise their full name.
   string display_name = 3;
-  string trade = 4;     // not set yet
-  string specialty = 5; // not set yet
-  string phone = 6;
-  string avatar_url = 7; // not set yet
-  // Replaced by skill_ids and other_trades.
-  repeated string service_types = 8 [deprecated = true];
-  // True once the application is approved and the account isn't suspended.
-  // Only active artisans can take new requests.
-  bool active = 9;
-  bool verified = 10;
-  // The bio from their application.
-  string about = 11;
-  int64 from_price = 12; // not set yet
+  // The number customers reach them on for work.
+  string phone = 4;
+  string about = 5;
   // When customers can reach them, e.g. "Weekdays · 8:00 AM – 6:00 PM".
-  string availability = 13;
-
+  string availability = 6;
   // Skills from the app's trade catalog, as "<category id>.<skill id>",
   // e.g. "power-and-water.electrician".
-  repeated string skill_ids = 14;
+  repeated string skill_ids = 7;
   // "Other (specify)" answers: category id -> the trade as they typed it.
-  map<string, string> other_trades = 15;
-  // The application's review status: "pending_review", "approved" or
-  // "rejected".
-  string application_status = 16;
-  string full_name = 17;
-  string business_name = 18;
-  uint32 years_of_experience = 19;
+  map<string, string> other_trades = 8;
+  uint32 years_of_experience = 9;
   // Where they work from, as they gave it, e.g. "Lekki, Lagos".
-  string location = 20;
+  string location = 10;
   // More on where, e.g. a landmark; may be empty.
-  string location_detail = 21;
+  string location_detail = 11;
   // How far from location they'll travel for a job.
-  uint32 coverage_radius_km = 22;
-  // The artisan's position from their profile, if the app had one; both or
-  // neither.
-  optional double latitude = 23;
-  optional double longitude = 24;
+  uint32 coverage_radius_km = 12;
+  bool verified = 13;
 }
 
-message GetArtisanRequest {
-  // The artisan's user ID.
-  uint64 artisan_id = 1;
-}
-
-message GetArtisanResponse {
-  Artisan artisan = 1;
-}
-
-message ListArtisansRequest {
-  // Required: one of the service types artisans offer, e.g. "Plumbing".
-  string service_type = 1;
-  // Leave out this user's own profile, so customers never see themselves.
-  uint64 exclude_user_id = 2;
-}
-
-message ListArtisansResponse {
-  repeated Artisan artisans = 1;
-}
-
-message GetUserRequest {
+message GetProfileRequest {
   uint64 user_id = 1;
 }
 
-message GetUserResponse {
-  User user = 1;
+message GetProfileResponse {
+  Profile profile = 1;
 }
 
-message BatchGetUsersRequest {
+message BatchGetProfilesRequest {
   repeated uint64 user_ids = 1;
 }
 
-message BatchGetUsersResponse {
-  repeated User users = 1;
+message BatchGetProfilesResponse {
+  repeated Profile profiles = 1;
 }
 
 message VerifyWithdrawalPinRequest {

@@ -9,7 +9,7 @@ import accountv1 "github.com/Mayotomiwa/intrufix-proto/gen/go/intrufix/account/v
 
 | Package               | Served by        | Services and callers                                |
 |-----------------------|------------------|-----------------------------------------------------|
-| `intrufix.account.v1` | intrufix-account | `UserService`, `ArtisanService` (core, admin): users, artisan profiles and the hireable list; `WithdrawalPinService` (core): checking withdrawal PINs; `AdminService` (admin) |
+| `intrufix.account.v1` | intrufix-account | `ProfileService` (core, admin): users' profiles and the modes they have; `WithdrawalPinService` (core): checking withdrawal PINs; `AdminService` (admin) |
 
 ## Changing a contract
 
