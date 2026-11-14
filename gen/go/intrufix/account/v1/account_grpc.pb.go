@@ -19,309 +19,153 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_GetUser_FullMethodName       = "/intrufix.account.v1.UserService/GetUser"
-	UserService_BatchGetUsers_FullMethodName = "/intrufix.account.v1.UserService/BatchGetUsers"
+	ProfileService_GetProfile_FullMethodName       = "/intrufix.account.v1.ProfileService/GetProfile"
+	ProfileService_BatchGetProfiles_FullMethodName = "/intrufix.account.v1.ProfileService/BatchGetProfiles"
 )
 
-// UserServiceClient is the client API for UserService service.
+// ProfileServiceClient is the client API for ProfileService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// UserService gives other services read access to users.
+// ProfileService gives other services read access to users. A person has one
+// user ID and one profile; what they can do is in the profile's modes.
 // Callers: core, admin.
-type UserServiceClient interface {
+type ProfileServiceClient interface {
 	// Returns NOT_FOUND if the user doesn't exist.
-	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
-	// Looks up to 100 users in one call. IDs that don't exist are left out of
-	// the response, so callers should index the result by ID.
-	BatchGetUsers(ctx context.Context, in *BatchGetUsersRequest, opts ...grpc.CallOption) (*BatchGetUsersResponse, error)
+	GetProfile(ctx context.Context, in *GetProfileRequest, opts ...grpc.CallOption) (*GetProfileResponse, error)
+	// Looks up to 100 profiles in one call. IDs that don't exist are left out
+	// of the response, so callers should index the result by user_id.
+	BatchGetProfiles(ctx context.Context, in *BatchGetProfilesRequest, opts ...grpc.CallOption) (*BatchGetProfilesResponse, error)
 }
 
-type userServiceClient struct {
+type profileServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewUserServiceClient(cc grpc.ClientConnInterface) UserServiceClient {
-	return &userServiceClient{cc}
+func NewProfileServiceClient(cc grpc.ClientConnInterface) ProfileServiceClient {
+	return &profileServiceClient{cc}
 }
 
-func (c *userServiceClient) GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error) {
+func (c *profileServiceClient) GetProfile(ctx context.Context, in *GetProfileRequest, opts ...grpc.CallOption) (*GetProfileResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetUserResponse)
-	err := c.cc.Invoke(ctx, UserService_GetUser_FullMethodName, in, out, cOpts...)
+	out := new(GetProfileResponse)
+	err := c.cc.Invoke(ctx, ProfileService_GetProfile_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userServiceClient) BatchGetUsers(ctx context.Context, in *BatchGetUsersRequest, opts ...grpc.CallOption) (*BatchGetUsersResponse, error) {
+func (c *profileServiceClient) BatchGetProfiles(ctx context.Context, in *BatchGetProfilesRequest, opts ...grpc.CallOption) (*BatchGetProfilesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(BatchGetUsersResponse)
-	err := c.cc.Invoke(ctx, UserService_BatchGetUsers_FullMethodName, in, out, cOpts...)
+	out := new(BatchGetProfilesResponse)
+	err := c.cc.Invoke(ctx, ProfileService_BatchGetProfiles_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// UserServiceServer is the server API for UserService service.
-// All implementations must embed UnimplementedUserServiceServer
+// ProfileServiceServer is the server API for ProfileService service.
+// All implementations must embed UnimplementedProfileServiceServer
 // for forward compatibility.
 //
-// UserService gives other services read access to users.
+// ProfileService gives other services read access to users. A person has one
+// user ID and one profile; what they can do is in the profile's modes.
 // Callers: core, admin.
-type UserServiceServer interface {
+type ProfileServiceServer interface {
 	// Returns NOT_FOUND if the user doesn't exist.
-	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
-	// Looks up to 100 users in one call. IDs that don't exist are left out of
-	// the response, so callers should index the result by ID.
-	BatchGetUsers(context.Context, *BatchGetUsersRequest) (*BatchGetUsersResponse, error)
-	mustEmbedUnimplementedUserServiceServer()
+	GetProfile(context.Context, *GetProfileRequest) (*GetProfileResponse, error)
+	// Looks up to 100 profiles in one call. IDs that don't exist are left out
+	// of the response, so callers should index the result by user_id.
+	BatchGetProfiles(context.Context, *BatchGetProfilesRequest) (*BatchGetProfilesResponse, error)
+	mustEmbedUnimplementedProfileServiceServer()
 }
 
-// UnimplementedUserServiceServer must be embedded to have
+// UnimplementedProfileServiceServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedUserServiceServer struct{}
+type UnimplementedProfileServiceServer struct{}
 
-func (UnimplementedUserServiceServer) GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetUser not implemented")
+func (UnimplementedProfileServiceServer) GetProfile(context.Context, *GetProfileRequest) (*GetProfileResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetProfile not implemented")
 }
-func (UnimplementedUserServiceServer) BatchGetUsers(context.Context, *BatchGetUsersRequest) (*BatchGetUsersResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method BatchGetUsers not implemented")
+func (UnimplementedProfileServiceServer) BatchGetProfiles(context.Context, *BatchGetProfilesRequest) (*BatchGetProfilesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method BatchGetProfiles not implemented")
 }
-func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
-func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
+func (UnimplementedProfileServiceServer) mustEmbedUnimplementedProfileServiceServer() {}
+func (UnimplementedProfileServiceServer) testEmbeddedByValue()                        {}
 
-// UnsafeUserServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to UserServiceServer will
+// UnsafeProfileServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ProfileServiceServer will
 // result in compilation errors.
-type UnsafeUserServiceServer interface {
-	mustEmbedUnimplementedUserServiceServer()
+type UnsafeProfileServiceServer interface {
+	mustEmbedUnimplementedProfileServiceServer()
 }
 
-func RegisterUserServiceServer(s grpc.ServiceRegistrar, srv UserServiceServer) {
-	// If the following call panics, it indicates UnimplementedUserServiceServer was
+func RegisterProfileServiceServer(s grpc.ServiceRegistrar, srv ProfileServiceServer) {
+	// If the following call panics, it indicates UnimplementedProfileServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&UserService_ServiceDesc, srv)
+	s.RegisterService(&ProfileService_ServiceDesc, srv)
 }
 
-func _UserService_GetUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserRequest)
+func _ProfileService_GetProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProfileRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).GetUser(ctx, in)
+		return srv.(ProfileServiceServer).GetProfile(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserService_GetUser_FullMethodName,
+		FullMethod: ProfileService_GetProfile_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUser(ctx, req.(*GetUserRequest))
+		return srv.(ProfileServiceServer).GetProfile(ctx, req.(*GetProfileRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_BatchGetUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BatchGetUsersRequest)
+func _ProfileService_BatchGetProfiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchGetProfilesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).BatchGetUsers(ctx, in)
+		return srv.(ProfileServiceServer).BatchGetProfiles(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserService_BatchGetUsers_FullMethodName,
+		FullMethod: ProfileService_BatchGetProfiles_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).BatchGetUsers(ctx, req.(*BatchGetUsersRequest))
+		return srv.(ProfileServiceServer).BatchGetProfiles(ctx, req.(*BatchGetProfilesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
+// ProfileService_ServiceDesc is the grpc.ServiceDesc for ProfileService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var UserService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "intrufix.account.v1.UserService",
-	HandlerType: (*UserServiceServer)(nil),
+var ProfileService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "intrufix.account.v1.ProfileService",
+	HandlerType: (*ProfileServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetUser",
-			Handler:    _UserService_GetUser_Handler,
+			MethodName: "GetProfile",
+			Handler:    _ProfileService_GetProfile_Handler,
 		},
 		{
-			MethodName: "BatchGetUsers",
-			Handler:    _UserService_BatchGetUsers_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "intrufix/account/v1/account.proto",
-}
-
-const (
-	ArtisanService_GetArtisan_FullMethodName   = "/intrufix.account.v1.ArtisanService/GetArtisan"
-	ArtisanService_ListArtisans_FullMethodName = "/intrufix.account.v1.ArtisanService/ListArtisans"
-)
-
-// ArtisanServiceClient is the client API for ArtisanService service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-//
-// ArtisanService gives other services read access to artisans. An artisan is
-// a user who has submitted an artisan application; they keep their one user
-// ID, and the session's mode says whether they're acting as a customer or an
-// artisan.
-// Callers: core, admin.
-type ArtisanServiceClient interface {
-	// Returns NOT_FOUND if the user has no artisan application.
-	GetArtisan(ctx context.Context, in *GetArtisanRequest, opts ...grpc.CallOption) (*GetArtisanResponse, error)
-	// Lists the artisans customers can hire for a service type: active, not
-	// suspended, verified first. At most 50.
-	ListArtisans(ctx context.Context, in *ListArtisansRequest, opts ...grpc.CallOption) (*ListArtisansResponse, error)
-}
-
-type artisanServiceClient struct {
-	cc grpc.ClientConnInterface
-}
-
-func NewArtisanServiceClient(cc grpc.ClientConnInterface) ArtisanServiceClient {
-	return &artisanServiceClient{cc}
-}
-
-func (c *artisanServiceClient) GetArtisan(ctx context.Context, in *GetArtisanRequest, opts ...grpc.CallOption) (*GetArtisanResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetArtisanResponse)
-	err := c.cc.Invoke(ctx, ArtisanService_GetArtisan_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *artisanServiceClient) ListArtisans(ctx context.Context, in *ListArtisansRequest, opts ...grpc.CallOption) (*ListArtisansResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListArtisansResponse)
-	err := c.cc.Invoke(ctx, ArtisanService_ListArtisans_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// ArtisanServiceServer is the server API for ArtisanService service.
-// All implementations must embed UnimplementedArtisanServiceServer
-// for forward compatibility.
-//
-// ArtisanService gives other services read access to artisans. An artisan is
-// a user who has submitted an artisan application; they keep their one user
-// ID, and the session's mode says whether they're acting as a customer or an
-// artisan.
-// Callers: core, admin.
-type ArtisanServiceServer interface {
-	// Returns NOT_FOUND if the user has no artisan application.
-	GetArtisan(context.Context, *GetArtisanRequest) (*GetArtisanResponse, error)
-	// Lists the artisans customers can hire for a service type: active, not
-	// suspended, verified first. At most 50.
-	ListArtisans(context.Context, *ListArtisansRequest) (*ListArtisansResponse, error)
-	mustEmbedUnimplementedArtisanServiceServer()
-}
-
-// UnimplementedArtisanServiceServer must be embedded to have
-// forward compatible implementations.
-//
-// NOTE: this should be embedded by value instead of pointer to avoid a nil
-// pointer dereference when methods are called.
-type UnimplementedArtisanServiceServer struct{}
-
-func (UnimplementedArtisanServiceServer) GetArtisan(context.Context, *GetArtisanRequest) (*GetArtisanResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method GetArtisan not implemented")
-}
-func (UnimplementedArtisanServiceServer) ListArtisans(context.Context, *ListArtisansRequest) (*ListArtisansResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListArtisans not implemented")
-}
-func (UnimplementedArtisanServiceServer) mustEmbedUnimplementedArtisanServiceServer() {}
-func (UnimplementedArtisanServiceServer) testEmbeddedByValue()                        {}
-
-// UnsafeArtisanServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ArtisanServiceServer will
-// result in compilation errors.
-type UnsafeArtisanServiceServer interface {
-	mustEmbedUnimplementedArtisanServiceServer()
-}
-
-func RegisterArtisanServiceServer(s grpc.ServiceRegistrar, srv ArtisanServiceServer) {
-	// If the following call panics, it indicates UnimplementedArtisanServiceServer was
-	// embedded by pointer and is nil.  This will cause panics if an
-	// unimplemented method is ever invoked, so we test this at initialization
-	// time to prevent it from happening at runtime later due to I/O.
-	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
-		t.testEmbeddedByValue()
-	}
-	s.RegisterService(&ArtisanService_ServiceDesc, srv)
-}
-
-func _ArtisanService_GetArtisan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetArtisanRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ArtisanServiceServer).GetArtisan(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ArtisanService_GetArtisan_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ArtisanServiceServer).GetArtisan(ctx, req.(*GetArtisanRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ArtisanService_ListArtisans_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListArtisansRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ArtisanServiceServer).ListArtisans(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ArtisanService_ListArtisans_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ArtisanServiceServer).ListArtisans(ctx, req.(*ListArtisansRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-// ArtisanService_ServiceDesc is the grpc.ServiceDesc for ArtisanService service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var ArtisanService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "intrufix.account.v1.ArtisanService",
-	HandlerType: (*ArtisanServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "GetArtisan",
-			Handler:    _ArtisanService_GetArtisan_Handler,
-		},
-		{
-			MethodName: "ListArtisans",
-			Handler:    _ArtisanService_ListArtisans_Handler,
+			MethodName: "BatchGetProfiles",
+			Handler:    _ProfileService_BatchGetProfiles_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
