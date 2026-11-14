@@ -100,9 +100,12 @@ type Profile struct {
 	ActiveMode string `protobuf:"bytes,12,opt,name=active_mode,json=activeMode,proto3" json:"active_mode,omitempty"`
 	// Every mode the user has. Customer always; others once the user adds
 	// them.
-	Modes         []*Mode `protobuf:"bytes,13,rep,name=modes,proto3" json:"modes,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Modes []*Mode `protobuf:"bytes,13,rep,name=modes,proto3" json:"modes,omitempty"`
+	// Another number to reach them on, if they gave one; empty otherwise.
+	// Only phone signs in, and other users may share this one.
+	SecondaryPhone string `protobuf:"bytes,14,opt,name=secondary_phone,json=secondaryPhone,proto3" json:"secondary_phone,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Profile) Reset() {
@@ -226,6 +229,13 @@ func (x *Profile) GetModes() []*Mode {
 	return nil
 }
 
+func (x *Profile) GetSecondaryPhone() string {
+	if x != nil {
+		return x.SecondaryPhone
+	}
+	return ""
+}
+
 // Mode is one side of the app a user has.
 type Mode struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -338,8 +348,10 @@ type ArtisanDetails struct {
 	// How far from location they'll travel for a job.
 	CoverageRadiusKm uint32 `protobuf:"varint,12,opt,name=coverage_radius_km,json=coverageRadiusKm,proto3" json:"coverage_radius_km,omitempty"`
 	Verified         bool   `protobuf:"varint,13,opt,name=verified,proto3" json:"verified,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// Another number customers can reach them on; may be empty.
+	SecondaryPhone string `protobuf:"bytes,14,opt,name=secondary_phone,json=secondaryPhone,proto3" json:"secondary_phone,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *ArtisanDetails) Reset() {
@@ -461,6 +473,13 @@ func (x *ArtisanDetails) GetVerified() bool {
 		return x.Verified
 	}
 	return false
+}
+
+func (x *ArtisanDetails) GetSecondaryPhone() string {
+	if x != nil {
+		return x.SecondaryPhone
+	}
+	return ""
 }
 
 type GetProfileRequest struct {
@@ -1005,7 +1024,7 @@ var File_intrufix_account_v1_account_proto protoreflect.FileDescriptor
 
 const file_intrufix_account_v1_account_proto_rawDesc = "" +
 	"\n" +
-	"!intrufix/account/v1/account.proto\x12\x13intrufix.account.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xdb\x03\n" +
+	"!intrufix/account/v1/account.proto\x12\x13intrufix.account.v1\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x84\x04\n" +
 	"\aProfile\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x04R\x06userId\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x14\n" +
@@ -1023,7 +1042,8 @@ const file_intrufix_account_v1_account_proto_rawDesc = "" +
 	"\tlongitude\x18\v \x01(\x01H\x01R\tlongitude\x88\x01\x01\x12\x1f\n" +
 	"\vactive_mode\x18\f \x01(\tR\n" +
 	"activeMode\x12/\n" +
-	"\x05modes\x18\r \x03(\v2\x19.intrufix.account.v1.ModeR\x05modesB\v\n" +
+	"\x05modes\x18\r \x03(\v2\x19.intrufix.account.v1.ModeR\x05modes\x12'\n" +
+	"\x0fsecondary_phone\x18\x0e \x01(\tR\x0esecondaryPhoneB\v\n" +
 	"\t_latitudeB\f\n" +
 	"\n" +
 	"_longitude\"~\n" +
@@ -1032,7 +1052,7 @@ const file_intrufix_account_v1_account_proto_rawDesc = "" +
 	"\x06status\x18\x02 \x01(\tR\x06status\x12?\n" +
 	"\aartisan\x18\n" +
 	" \x01(\v2#.intrufix.account.v1.ArtisanDetailsH\x00R\aartisanB\t\n" +
-	"\adetails\"\xba\x04\n" +
+	"\adetails\"\xe3\x04\n" +
 	"\x0eArtisanDetails\x12\x1b\n" +
 	"\tfull_name\x18\x01 \x01(\tR\bfullName\x12#\n" +
 	"\rbusiness_name\x18\x02 \x01(\tR\fbusinessName\x12!\n" +
@@ -1047,7 +1067,8 @@ const file_intrufix_account_v1_account_proto_rawDesc = "" +
 	" \x01(\tR\blocation\x12'\n" +
 	"\x0flocation_detail\x18\v \x01(\tR\x0elocationDetail\x12,\n" +
 	"\x12coverage_radius_km\x18\f \x01(\rR\x10coverageRadiusKm\x12\x1a\n" +
-	"\bverified\x18\r \x01(\bR\bverified\x1a>\n" +
+	"\bverified\x18\r \x01(\bR\bverified\x12'\n" +
+	"\x0fsecondary_phone\x18\x0e \x01(\tR\x0esecondaryPhone\x1a>\n" +
 	"\x10OtherTradesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\",\n" +
